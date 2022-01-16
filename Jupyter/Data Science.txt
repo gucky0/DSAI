@@ -1,0 +1,789 @@
+Jupyter Current Working Directory:
+http://localhost:8888/tree/AppData/Local/Programs/Python/Python39/Scripts/Scripts/Hafiz/Jupyter
+
+help
+function_name?
+
+# Tutorial 1
+
+import pandas as pd
+import numpy as np
+
+# read excel file
+df = pd.read_csv('train.csv', header = 0)
+df.head()
+
+df.shape 
+# (r,c)
+
+df.dtypes
+# int64, object or float64
+# sort by catagorical (text or 1-10 {numeric encoding}) or numerical (numbers or decimals)
+
+df.info()
+# number of non-null entries
+
+df.describe()
+# count mean etc. useful for stddev
+
+html = pd.read_html('https://*')
+type(html)
+len(html)
+
+# finding the table
+for index, line in enumerate(html):
+	print(line)
+	if input().lower() == 'y':
+		print(index)
+		break
+
+df = html[index]
+
+#extract first n rows
+n = 20
+df_n = df.iloc[:n]
+# or
+df.head(n)
+
+year_list = [2016, 2012, 2008, 2004, 2000]
+html_dict = {}
+for year in year_list:
+	html = pd.read_html(f'https://{year}')
+	html_dict[year] = html
+
+# accessing columns:
+df["column_name"]
+
+# accessing rows:
+df.iloc[row_num]
+
+html_data = pd.read_html('http://www.imdb.com/title/tt0441773/fullcredits/?ref_=tt_ov_st_sm')
+table = html_data[2]
+cast = table[1][1:] # skip NaN entry, maybe can clean also
+
+__________________________________
+
+Tutorial 2
+
+import numpy as np
+import pandas as pd
+import seaborn as sb
+import matplotlib.pyplot as plt # we only need pyplot
+sb.set() # set the default Seaborn style for graphics
+
+
+# extract specific type of data
+df_int = df.select_dtypes(include = np.int64)
+
+# create column variable - observation table 
+	
+non_numeric = [..]
+df_cat = df.drop(non_numeric, axis = 1)
+
+target = '..'
+df_target = pd.DataFrame(df[target])
+
+fig = plt.figure(figsize = (24, 4))
+sb.boxplot(data = df_target, orient = 'h')
+sb.histplot(data = df_target)
+sb.violinplot(data = df_target, orient = 'h')
+
+# creating jointplots
+df_dict = {}
+for i in target:
+	df_target = pd.DataFrame(df[target])
+	df_dict[target] = df_target
+
+df_list = list(dict.values())	
+df_joint = pd.concat(df_list, axis = 1).reindex(df_target.index)
+sb.jointplot(data = df_concat, x = '..', y = '..', height = 12)
+
+df_joint.corr()
+sb.heatmap(df_joint.corr(), vmin = -1, vmax = 1, annot = True, fmt = ".2f")
+
+# good correlation if value is > 0.7
+# repeat for others to find best estimate for SalePrice
+max = 0   
+for target in target_list:
+	correlation = df[target].corr(df["SalePrice"])
+	if correlation > max:
+		maximum = correlation
+		best = target
+print(f"best predictor is {best} with a correlation of {maximum}")
+
+# KDE stands for Kernel Density Estimate
+sb.distplot(speed, hist = False, color = "red")
+sb.distplot(speed, kde = False, color = "red")
+sb.distplot(speed, color = "red")
+
+# use catDF and numDF
+# Exploring / Filtering Data
+len(df[column].dropna().unique())
+df[column].dropna().value_counts()
+cond = df[column].isnull() == True
+cond = df[column].isin(target_list)
+df[cond]
+
+
+sb.heatmap(df.groupby([target1, target2]).size().unstack(),
+           linewidths = 1, annot = True, annot_kws = {"size": 18}, cmap = "BuGn")
+           
+for index in range(1,7):
+    cond = df["Generation"] == index
+    mydf = df[cond]
+    sb.heatmap(df.groupby([target1, target2]).size().unstack(),
+           linewidths = 1, annot = True, annot_kws = {"size": 18}, cmap = "BuGn", ax = axes[0, index])
+df.describe().round(2)
+
+mydf = df.duplicated(column, keep = False)
+mydf.sort_values(by = column).head(n = 10)
+for var in mydf[column].unique():
+    cond   = mydf[column] == var
+    mylist = list(mydf[cond][column])
+    count  = len(mylist)
+    print(f"{var} | {count} | {mylist}")
+
+# cleaning the data
+df_clean = df.copy()
+df_clean.rename(columns = {old: new}, inplace = True)
+df_clean.columns = df_clean.columns.str.upper()
+df_clean.columns = df_clean.columns.str.replace(old, new)
+import re
+df_clean[column] = df_clean[column].apply(lambda x: re.sub(r'expression', r'output', x))
+# remove blanks
+df_clean["NAME"] = df_clean["NAME"].apply(lambda x: re.sub(r'\s+','', x))
+# changing value in specific cell
+df.loc[r, c] = value
+# changing index values
+df = df.set_index(column)
+df.sample(n = 10)
+# missing values
+df.isnull().sum() # you'd want to see zero here
+df[column].fillna(value = "NoType", inplace = True)
+df.info()
+df[column].dropna().value_counts() # im guessing checking if number of values decreases? but can check with code above and comparison statement
+# sorting by ascending / descending
+df.sort_values(column, ascending = False).head(n = 10)
+# sorting by mean
+df_mean = df.groupby(target_list).mean().loc[:,column]
+df_mean.reset_index().sort_values(column, ascending = False).head(10).round(2)
+
+__________________________________
+
+Tutorial 3
+
+# creating multiple plots
+length = len(target_list)
+
+df_list = pd.DataFrame(df[target_list])
+colors = ('r', 'b')
+fig, axes = plt.subplots(2, length, figsize = (24, 4*length))
+
+for (index, target) in enumerate(target_list):
+	df_target = df[target]
+	iter_color = colors[index % len(colors)]
+
+	sb.boxplot(data = df_target, orient = 'h', color = iter_color, ax = axes[index,0])
+	sb.histplot(data = df_target, color = iter_color, ax = axes[index,1])
+	sb.violinplot(data = df_target, orient = 'h', color = iter_color, ax = axes[index,2])
+
+maximum = 0
+for target in df:
+	skewness = df[target].skew()
+	print('\nName:\t{target} \nSkewness:\t{skewness})
+	if skewness > maximum:
+		maximum = skewness
+		best = target
+print(f"{best} has the most number of outliers as it has the highest skewness ({skewness}).")
+	
+Q1 = df.quantile(0.25)
+Q3 = df.quantile(0.75)
+IQR = Q3 - Q1
+const = 1.5
+minQ = Q1 - const * IQR
+maxQ = Q3 + const * IQR
+( (df < minQ) | (df > maxQ) ).sum()
+
+# _ has the most outliers while _ has the least
+
+# Heatmap of the Correlation Matrix 
+def hmap(df):
+	sb.heatmap(df.corr(), vmin = -1, vmax = 1, linewidths = 1, annot = True, fmt = ".2f", annot_kws = {"size": 18}, cmap = "RdBu")
+fig, axes = plt.subplots(1, 1, figsize(20,20))
+hmap(df)
+## make words bigger
+
+# The SalePrice has the highest correlation with SalePrice but this is not useful. However, the GrLivArea has the next highest correlation with SalePrice. This is somewhat useful in predicting SalePrice since it is something that is easy to measure, and it can be used to justify if the SalePrice is t oo high or too low.
+
+# all bi-variate jointplots
+sb.pairplot(data = df)
+
+# The GrLivArea has the next highest correlation with SalePrice. There is still quite a high dispersion associated with the joint plot, as well as many visible outliers.
+
+best predictor: corr > 0.7
+good predictor: corr > 0.6
+
+# attempt with all numeric variables
+
+df_numeric = df[numeric_list]
+[x > 0.6 for x in df_numeric.corr()[-1]]
+
+df_catagorical = df[catagorical_list]
+
+df.describe() # this shd show wrong output
+
+for target in df.columns: #apparently dont need .columns
+	df[target] = df[target].astype('category')
+df.dtypes
+
+df.describe() # this shd show correct output
+
+for target in df.columns:
+	sb.catplot(y = target, data = df, kind = 'count', height = 8)
+	
+# Distribution of values from one variable to another
+def hmaps(df_map, index):
+	sb.heatmap(df_map, linewidths = 1, annot = True, fmt = 'g', annot_kws = {"size": 18}, cmap = "BuGn", ax = axes[1,index])
+
+import itertools
+pair_list = list(itertools.combinations(target_list, 2))
+length = len(pair_list)
+
+fig, axes = plt.subplots(1, length, figsize = (10, 8))
+for (index, target_pair) in enumerate(pair_list):
+		df_map = df.groupby(target_pair).size().unstack()
+		hmaps(df_map, index)
+
+# checking distribution of SalePrice across different variables
+for target in target_list:
+	content = (x = target, y = "SalePrice", data = df)
+	sb.boxplot(*content)
+	sns.stripplot(*content) # adding dots to plot
+plt.xticks(rotation = 45)
+
+# best predictor follows an upward / downward trend
+# Bonus Problem 1:
+df_catagorical
+length = len(df_catagorical)
+fig, axes = plt.subplots(1, length, figsize(16, 8 * length))
+for target in df_catagorical:
+	sb.boxplot(x = target, y = "SalePrice", data = df)
+# analyze trends
+
+# options:
+boxplot:
+- boxprops = dict(color = 'red')
+- notch 
+- labels
+- widths
+- patch_artist
+- medianprops = dict(linestyle='-', linewidth=2, color='Yellow')
+- boxprops = dict(linestyle='--', linewidth=2, color='Black', facecolor = 'blue', alpha = .4)
+df.boxplot
+- labels = ["name1", ..]
+- title
+- column (y)
+- by (x)
+sns.boxplot
+- palette = "Set1"
+distplot:
+- hist
+- kde
+- bins
+- color
+- hist_kws
+- kdw_kws
+jointplot:
+- height
+- color = "coral"
+- kind = "reg"
+plt: fontsize, set_clabel, set_ylabel, grid()
+- rcParams: set default parameter values
+scatter:
+-s = 10
+plot:
+'k-': black?
+sns:
+set_style("whitegrid")
+outliers: outside of boxlot whiskers
+cream of the data: box of boxplot (50% of data)
+median: boxplot mid line
+notch: 95% confidence of interval of median: median +- 1.57 * IQR/n^0.5
+
+condition = df[column1 == value
+df_box = df[condition][column2]
+
+unique = df[target].value_counts(dropna = False)
+# Linear Equation: y = (m * x) + c
+# Linear Regression: Response = (Coefficient * Predictor) + Intercept
+# Explained Variance aka R^2: linreg.score() > 0.6
+# Mean Squared Error (MSE): np.mean(np.square(np.array(actual) - np.array(predicted)))
+# Root Mean Squared Erroe (RMSE): np.sqrt(mse)
+# split dataset randomly using train_test_split
+# from sklearn.metrics import mean_squared_error
+# Multi-Variate Linear Regression model: Response = (C1 * Predictor1) + (C2 * Predictor2) + Intercept
+trainDF = pd.concat([y_train, X_train], axis = 1, join_axes = [y_train.in
+dex])
+# displaying data nicely (chaning index and column name)
+mydf = pd.DataFrame(y_pred, columns = column_name, index = df.index)
+y_prob = pd.DataFrame(list(y_prob[:,1]), columns = ["ProbLegend"], index = pkmndata_pred.index)
+mydf = pd.concat([df[target_list], mydf], axis = 1)
+err = 100 * abs(mydf[column1] - mydf[column2]) / mydf[column1]
+mydf2 = pd.DataFrame(err, columns = column_name,index = df.index)
+mydf = pd.concat([mydf, mydf2], axis = 1)
+# Standard Error of Prediction: StdE_pred = np.sqrt(len(y_train) * mean_squared_error(y_train, y_train_pred)/(len(y_train) - 2))
+# 95%: Prediction +- 1.96 * StdE_pred
+# 99%: Prediction +- 2.58 * StdE_pred
+y_95l = pd.DataFrame(pkmndata_acc["PredTotal"] - 1.96*StdE_pred).rename(columns = {"PredTotal" : "95 Lower"})
+pkmndata_int = pd.concat([pkmndata_acc, y_95l, y_95u, y_99l, y_99u], axis = 1)
+pd.DataFrame(pkmndata['Type 1'].astype('category'))
+__________________________________
+Tutorial 4
+
+# predict using variable
+from sklearn.linear_model import LinearRegression
+
+# first check data has equal num of rows:
+df_x.shape == df_y.shape
+
+linreg = LinearRegression()
+partition = 0.3 * num_of_rows
+x_train = pd.DataFrame(df[x][:num_of_rows - partition])
+x_test  = pd.DataFrame(df[x][-partition:]
+y_train = pd.DataFrame(df[y][:num_of_rows - partition])
+y_test  = pd.DataFrame(df[y][-partition:]
+
+linreg.fit(y_train, x_train)
+print(f"y = {linreg.coef_:.2f}x + {linreg.intercept_:.2f}")
+
+regline_x = x_train
+regline_y = linreg.coef_ * x_train + linreg.intercept_
+plt.scatter(x_train, y_train)
+plt.plot(x_train, regline_y, 'r-', linewidth = 3)
+plt.show()
+
+y_pred = linreg.predict(x_test)
+plt.scatter(x_test, y_test, color = "green")
+plt.plot(x_test, y_pred, color = "red")
+
+# checking R^2 value
+linreg.score(x_train, y_train)
+linreg.score(x_test, y_test) > 0.7
+
+# repeat with houseSalePrice = pd.DataFrame(np.log(houseData['SalePrice']))
+
+#predict saleprice (y) using lotarea (x)
+
+predictor = df['lotarea']
+y = df['saleprice']
+sb.jointplot(predictor, y, height = 12)
+
+# predict using multiple variables
+predictor = df[target_list]
+df_y = df["SalePrice"]
+
+x_train = pd.DataFrame(predictor[:num_of_rows - partition])
+x_test  = pd.DataFrame(predictor[-partition:]
+y_train = pd.DataFrame(df_y[:num_of_rows - partition])
+y_test  = pd.DataFrame(df_y[-partition:]
+
+linreg.fit(y_train, x_train)
+
+train_pred = linereg.predict(x_train)
+test_pred = linereg.predict(x_test)
+
+axes[index].scatter(y_train, train_pred, color = "blue")
+axes[index].plot(y_train, y_train, 'w-', linewidth = 1) #ugly
+
+axes[index].scatter(y_test, test_pred, color = "blue")
+axes[index].plot(y_test, y_test, 'w-', linewidth = 1) #ugly
+
+# checking R^2 value
+linreg.score(x_train, y_train)
+linreg.score(x_test, y_test) > 0.7
+abs(train_score - test_score / train_score) > 0.8 to show generalization
+
+def single_var_regression(predictor_str, response_str="SalePrice"):
+
+    """Procedure. Given the names of the predictors and the response
+    perform a train test split based on a percentage and
+    fit a regression model.
+    """
+    print("Predictor:\t", predictor_str)
+    print("Response:\t",  response_str)
+    
+    correlation = houseData[predictor_str].corr(houseData[response_str])
+    print("Correlation coefficient: ", correlation)
+    
+    X = pd.DataFrame(houseData[predictor_str])
+    y = pd.DataFrame(houseData[response_str])
+    
+    linreg = LinearRegression()
+    X_train, X_test, y_train, y_test = train_test_split(x, y, 
+                              test_size = (360/1460))
+    
+    linreg.fit(X_train, y_train)
+    print('Gradient:\t m =', str(linreg.coef_))
+    print('Intercept:\t c =', str(linreg.intercept_))
+    
+    regline_x = X_train
+    regline_y = (linreg.coef_ * X_train) + linreg.intercept_ 
+    
+    y_pred = linreg.predict(X_test)
+    
+    print("Explained Variance for Training (R^2)\t:", linreg.score(X_train, y_train))
+    print("Explained Variance for Testing (R^2)\t:", linreg.score(X_test, y_test))
+    
+    f, axes = plt.subplots(1, 2, figsize=(10, 8))
+    axes[0].scatter(x = X_train, 
+                    y = y_train,
+                    s = 10,
+                    c = 'b')
+
+    axes[0].plot(regline_x, 
+                 regline_y, 
+                 'k-', 
+                 linewidth = 2, 
+                 )
+				 
+    axes[1].scatter(x = X_test, 
+                    y = y_test,
+                    s = 10,
+                    c = "g")
+    axes[1].scatter(x = X_test, 
+                    y = y_pred, 
+                    s = 10,
+                    c = "k")
+    plt.show()
+
+# make above print nicer using pprint
+
+def multi_var_regression(predictor_list, response_str="SalePrice"):
+    """Procedure. Given the list of the predictors and the response
+    perform a train test split based on a percentage and
+    fit a regression model.
+    """
+	
+    X = pd.DataFrame(houseData[predictor_list])
+    y = pd.DataFrame(houseData[response_str])
+    linreg = LinearRegression()
+    X_train, X_test, y_train, y_test = train_test_split(X, y, 
+                              test_size = (360/1460))
+    
+    linreg.fit(X_train, y_train)
+    print('Gradient:\t m = ', linreg.coef_)
+    print('Intercept:\t c = ', linreg.intercept_)
+    
+    y_train_pred = linreg.predict(X_train)
+    y_pred = linreg.predict(X_test)
+    
+    print("Explained Variance for Training (R^2)\t:", linreg.score(X_train, y_train))
+    print("Explained Variance for Testing (R^2)\t:", linreg.score(X_test, y_test))
+    
+    f, axes = plt.subplots(2, 1, figsize=(10, 20))
+    axes[0].set_xlabel("True values of the Response Variable (Train)")
+    axes[0].set_ylabel("Predicted values of the Response Variable (Train)")
+    axes[1].set_xlabel("True values of the Response Variable (Test)")
+    axes[1].set_ylabel("Predicted values of the Response Variable (Test)")
+    axes[0].scatter(x = y_train,
+                    y = y_train_pred,
+                    s = 10,
+                    c = 'b')
+    axes[0].plot(y_train, y_train, 'k-', linewidth= 1) # Diagonal line
+    axes[1].plot(y_test, y_test, 'k-', linewidth= 1) # Diagonal line
+    axes[1].scatter(x = y_test, 
+                    y = y_pred, 
+                    s = 10,
+                    c = "g")
+    plt.show()
+
+# gradient shd be in list with predictor_list
+# Bonus Problem 2:
+mulit_var_without_plot(target_list)
+
+y_prob = dectree.predict_proba(X_pred)
+np.set_printoptions(precision = 3)
+__________________________________
+Tutorial 5
+
+use describe to find out notable features: count, no of unique, top, freq,  dtype
+
+use catplot to view the distribution of data in the column (finding blanced data for classification)
+sb.catplot(y = target, data = df, kind = "count")
+
+# if data is umbalanced, under-sample the majority data provided you have a large sample size (10k)
+# try other ratios (1*9 : 9)
+# try stratified sampling (1:1)
+# use decisiom tree on imbalanced datasets (C4.5, C5.0, CART, and Random Forest)
+
+# visual mutual rs between two variables
+sb.boxplot(x = target1, y = target2, data = df)
+# notice the midline to determine general trend (median), number of outliers, how much data is partitioned to one side of box indicating a majority trend, and bulk of plot filled (spread).
+
+# to see the spead of data more clearly, use swarmplot.
+sb.swarmplot(x = target1, y = target2, data = df)
+
+# Import Decision Tree Classifier model from Scikit-Learn
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import train_test_split
+
+# Create a Decision Tree Classifier object
+dectree = DecisionTreeClassifier(max_depth = 2)
+
+data_train, data_test = train_test_split(df, test_size = 360, random_state = 12)
+
+x_train = pd.DataFrame(data_train[target1])
+y_train = pd.DataFrame(data_train[target2])
+
+dectree.fit(x_train, y_train)
+
+# Import export_graphviz from sklearn.tree
+from sklearn.tree import export_graphviz
+
+# Export the Decision Tree as a dot object
+treedot = export_graphviz(dectree,                                      # the model
+                          feature_names = X_train.columns,              # the features 
+                          out_file = None,                              # output file
+                          filled = True,                                # node colors
+                          rounded = True,                               # make pretty
+                          special_characters = True)                    # postscript
+
+# Render using graphviz
+ import graphviz
+ graphviz.Source(treedot)
+
+# Plot the trained Decision Tree
+from sklearn.tree import plot_tree
+
+f = plt.figure(figsize=(10,10))
+plot_tree(dectree, 
+          feature_names = X_train.columns, 
+          class_names=['N','Y'], 
+          filled=True, 
+          rounded=True)
+
+# Example of Confusion Matrix to check goodness of fit of Train dataset
+train_pred = dectree.predict(x_train)
+dectree.score(X_train, y_train)
+
+from sklearn.metrics import confusion_matrix
+
+cm = confusion_matrix(y_train, train_pred)
+
+sb.heatmap(confusion_matrix(y_train, y_train_pred), 
+           annot = True, fmt=".0f", annot_kws={"size": 18})
+
+[[TN, FP], [FN, TP]] = confusion_matrix(y_train, y_train_pred)
+
+# Example of Confusion Matrix to check goodness of fit of Test dataset
+x_test = pd.DataFrame(data_test[target1])
+y_test = pd.DataFrame(data_test[target2])
+
+test_pred = dectree.predict(x_test)
+dectree.score(x_test, y_test)
+
+sb.heatmap(confusion_matrix(y_test, test_pred), 
+           annot = True, fmt=".0f", annot_kws={"size": 18})
+
+# from results, it can be seen that FP and FN for Train dataset > that of Test dataset. This is an effect of the imbalance shown above (Y >> N). Since Y is more likely, FP is more likely as well.
+x = pd.DataFrame(df[var])
+y = pd.DataFrame(df[target])
+
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 360)
+
+train_pred = dectree.predict(x_train)
+test_pred  = dectree.predict(x_test)
+
+dectree.score(x_train, y_train)
+dectree.score(x_test, y_test)
+
+heatmap = sb.heatmap(confusion_matrix(y_train, train_pred),
+           annot = True, fmt=".0f", annot_kws={"size": 18}, ax = axes[0])
+
+sb.heatmap(confusion_matrix(y_test, test_pred), 
+           annot = True, fmt=".0f", annot_kws={"size": 18}, ax = axes[1])
+
+plot_tree(dectree, 
+          feature_names = x_train.columns, 
+          class_names=['No','Yes'], 
+          filled=True, 
+          rounded=True)
+
+x = pd.DataFrame(houseData[var_list])
+y = pd.DataFrame(houseData[target])
+
+# Vary the Number of Clusters
+min_clust = 1
+max_clust = 40
+# Compute Within Cluster Sum of Squares
+within_ss = []
+for num_clust in range(min_clust, max_clust+1):
+    kmeans = KMeans(n_clusters = num_clust, init = 'k-means++', n_init = 5)
+    kmeans.fit(X)
+    within_ss.append(kmeans.inertia_)
+# Plot Within SS vs Number of Clusters
+f, axes = plt.subplots(1, 1, figsize=(16,4))
+plt.plot(range(min_clust, max_clust+1), within_ss)
+plt.xlabel('Number of Clusters')
+plt.ylabel('Within Cluster Sum of Squares')
+plt.xticks(np.arange(min_clust, max_clust+1, 1.0))
+plt.grid(which='major', axis='y')
+plt.show()
+__________________________________
+Tutorial 6
+
+# Bi-Variate Clustering
+df_area = pd.DataFrame(houseData[[target_list]])
+plt.scatter(x = target1, y = target2, data = df_area)                    
+
+# Using "KMeans" to predict number of clusters
+from sklearn.cluster import KMeans
+
+num_clust = 3
+kmeans = KMeans(n_clusters = num_clust)
+kmeans.fit(x)
+
+for index, coord in enumerate(kmeans.cluster_centers_):
+    print(f"Cluster {index}: {center[0]:.2f}, {center[1]:.2f}")
+
+labels = kmeans.predict(x)
+x_labeled = x.copy()
+x_labeled["Cluster"] = pd.Categorical(labels)
+
+sb.countplot(x_labeled["Cluster"])
+
+plt.scatter(x = target1, 
+            y = target2, 
+            c = "Cluster", 
+            cmap = 'viridis', # or 'coolwarm'
+            data = x_labeled)
+plt.axis("equal")
+
+# Bonus Problem: vary eps < 150
+from sklearn.cluster import DBSCAN
+clustering = DBSCAN(eps=40, min_samples=10).fit(x)
+
+labels = clustering.labels_
+
+# within cluster sum of squares
+kmeans.inertia_
+
+#Use the Nearest Neighbors (k-NN) pattern-identification method for detecting Outliers and Anomalies.
+# Import LocalOutlierFactor from sklearn.neighbors
+from sklearn.neighbors import LocalOutlierFactor
+
+# Set the Parameters for Neighborhood
+num_neighbors = 10      # Number of Neighbors
+cont_fraction = 0.05    # Fraction of Anomalies
+
+# Create Anomaly Detection Model using LocalOutlierFactor
+lof = LocalOutlierFactor(n_neighbors = num_neighbors, contamination = cont_fraction)
+
+# Fit the Model on the Data and Predict Anomalies
+lof.fit(x)
+
+# Predict the Anomalies
+labels = lof.fit_predict(x)
+
+plt.scatter(x = target1, 
+            y = target2, 
+            c = "Anomaly", 
+            cmap = 'viridis', 
+            data = x_labeled)
+            
+from sklearn.cluster import DBSCAN
+def DBScanProcedure(epsilon=80):
+    """
+    Procedure, uses DBScan with the associated distance epsilon.
+    """
+    x = pd.DataFrame(houseData[['GrLivArea','GarageArea']])
+    db = DBSCAN(eps=epsilon,
+
+    min_samples=int(0.01 * x['GrLivArea'].count()),
+    metric='euclidean').fit(x)
+
+    labels = db.fit_predict(x)
+    X_labeled = X.copy()
+    X_labeled["Cluster"] = pd.Categorical(labels)
+    f, axes = plt.subplots(1, 1, figsize=(10,10))
+    plt.scatter(x = "GrLivArea",
+                y = "GarageArea",
+                c = "Cluster",
+                cmap = 'viridis',
+                data = x_labeled)
+ 
+from sklearn.ensemble import IsolationForest
+x = pd.DataFrame(houseData[['GrLivArea','GarageArea']])
+IF = IsolationForest().fit(x)
+labels = IF.fit_predict(x)
+X_labeled = X.copy()
+X_labeled["Cluster"] = pd.Categorical(labels)
+f, axes = plt.subplots(1, 1, figsize=(10,10))
+plt.scatter(x = "GrLivArea",
+            y = "GarageArea",
+            c = "Cluster",
+            cmap = 'coolwarm',
+            data = x_labeled)
+
+For DBSCAN it is noticably different. No number of clusters were assumed initially, and at a eps of 80, a unique cluster can be identified in the middle of the large cluster which might be worth investigating. For the IsolationForest it is able to identify more outliers, but it is not quite clear as to whether the identification of anomalies is too aggressive or not.
+
+BDSCAN allows varying epsilon (distance btwn points) value which would be useful if the user has a specific criteria for clustering.
+__________________________________
+Tutorial 7
+
+# NumPy : Library for Numeric Computations in Python
+# Pandas : Library for Data Acquisition and Preparation
+# Matplotlib : Low-level library for Data Visualization
+# Seaborn : Higher-level library for Data Visualization
+# Plotly : High-level library for Interactive Graphics
+
+import plotly.offline as py
+import plotly.figure_factory as ff
+import plotly.graph_objs as go
+from plotly import tools
+
+# Activate inline plotting in notebook
+py.init_notebook_mode(connected = False)
+
+# Get Histogram from plotly.graph_objs (go)
+trace = go.Histogram(x = houseData['SalePrice'], histnorm = 'density')
+layout = go.Layout(title = 'Sale Price Distribution')
+data = [trace]
+fig = go.Figure(data = data, layout = layout)
+py.iplot(fig)
+
+# Visualizing boxplots with plotly
+trace0 = go.Box(x = houseData['GrLivArea'], showlegend = False, name = "Living Area")
+trace1 = go.Box(x = houseData['TotalBsmtSF'], showlegend = False, name = "Basement Area")
+trace2 = go.Box(x = houseData['GarageArea'], showlegend = False, name = "Garage Area")
+
+data = [trace0, trace1, trace2]
+py.iplot(data)
+
+# Producing multi_variate jointplots using plotly
+fig = tools.make_subplots(rows = 2, cols = 2, 
+                          subplot_titles = ('GrLiv Area Vs. Sale Price', 
+                                            'Lot Area Vs. Sale Price',
+                                            'Total Basement Vs. Sale Price', 
+                                            'Garage Area Vs. Sale Price'))
+p1 = go.Scatter(
+        x = houseData['GrLivArea'],
+        y = houseData['SalePrice'],
+        mode = 'markers', showlegend = False)
+
+fig.append_trace(p1,1, 1)
+fig['layout'].update(height = 800, width = 1000)
+py.iplot(fig)
+
+# Plotting heatmap for correlation using plotly
+houseNumData = pd.DataFrame(houseData[['LotArea', 'GrLivArea', 'TotalBsmtSF', 'GarageArea', 'SalePrice']])
+print(houseNumData.corr())
+trace = go.Heatmap(z = houseNumData.corr(), 
+                   x = houseNumData.columns, 
+                   y = houseNumData.columns, 
+                   colorscale = 'Hot',
+                   reversescale = True)
+data=[trace]
+py.iplot(data, filename='labelled-heatmap')
+
+
